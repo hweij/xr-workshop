@@ -64,26 +64,27 @@ export function createScene() {
 }
 
 function addControllers() {
-    function add(index: number) {
+    function addController(index: number) {
         const controller = renderer.xr.getController(index);
-        controller.addEventListener('selectstart', data => { controller.children[0].position.z = -0.1 });
-        controller.addEventListener('selectend', data => { controller.children[0].position.z = 0.0 })
-        controller.addEventListener('connected', (event) => {
-            return controller.add(buildController(event.data));
-        });
+        controller.addEventListener('selectstart', data => { controller.children[0].position.z = -0.1; });
+        controller.addEventListener('selectend', data => { controller.children[0].position.z = 0.0; })
+        controller.addEventListener('connected', (event) => createControllerNode(controller, event.data));
         controller.addEventListener('disconnected', () => controller.children[0]?.remove());
         scene.add(controller);
         return controller;
     };
-    controller0 = add(0);
-    controller1 = add(1);
+    controller0 = addController(0);
+    controller1 = addController(1);
 };
 
-function buildController(data: XRInputSource) {
+function createControllerNode(controller: THREE.XRTargetRaySpace, data: XRInputSource) {
     const color = (data.handedness === "right") ? "#ff0000" : "#0000ff";
-    const geometry = new THREE.SphereGeometry(0.03);
+    const geometry = new THREE.CylinderGeometry(0.005, 0.005, 0.2);
+    geometry.rotateX(Math.PI / 2);
+    geometry.translate(0, 0, -0.1);
     const material = new THREE.MeshBasicMaterial({ color });
     const mesh = new THREE.Mesh(geometry, material);
+    controller.add(mesh);
     return mesh;
 }
 
