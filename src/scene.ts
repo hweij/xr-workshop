@@ -21,6 +21,9 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, 0.1, 20);
 const controls = new OrbitControls(camera, container);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
+//** Controller 0 */
+var controller0: THREE.XRTargetRaySpace;
+var controller1: THREE.XRTargetRaySpace;
 
 export function createScene() {
     // Camera
@@ -55,7 +58,33 @@ export function createScene() {
     // VR
     // document.body.appendChild(VRButton.createButton(renderer));
 
+    addControllers();
+
     return scene;
+}
+
+function addControllers() {
+    function add(index: number) {
+        const controller = renderer.xr.getController(index);
+        controller.addEventListener('selectstart', data => { controller.children[0].position.z = -0.1 });
+        controller.addEventListener('selectend', data => { controller.children[0].position.z = 0.0 })
+        controller.addEventListener('connected', (event) => {
+            return controller.add(buildController(event.data));
+        });
+        controller.addEventListener('disconnected', () => controller.children[0]?.remove());
+        scene.add(controller);
+        return controller;
+    };
+    controller0 = add(0);
+    controller1 = add(1);
+};
+
+function buildController(data: XRInputSource) {
+    const color = (data.handedness === "right") ? "#ff0000" : "#0000ff";
+    const geometry = new THREE.SphereGeometry(0.03);
+    const material = new THREE.MeshBasicMaterial({ color });
+    const mesh = new THREE.Mesh(geometry, material);
+    return mesh;
 }
 
 function onWindowResize() {
