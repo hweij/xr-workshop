@@ -1,0 +1,19 @@
+{
+  "name": "xr-workshop",
+  "version": "1.0.0",
+  "description": "XR workshop",
+  "license": "ISC",
+  "author": "hweij",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --emptyOutDir --outDir ../hweij.github.io/xr-workshop",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.181.0",
+    "three": "^0.181.2",
+    "vite": "^7.2.6"
+  }
+}
