@@ -7,7 +7,10 @@ const FOV = 70;
 const EYE_LEVEL = 1.75;
 /** Initial perspective camera position */
 const P0 = [0, EYE_LEVEL, 1];
+/** Background/clear color */
+const BACKGROUND_COLOR = "#cccccc";
 
+/** Helper to reference an HTMLElement */
 const EL = (id: string) => document.getElementById(id)!;
 
 const container = EL("divThree");
@@ -17,15 +20,18 @@ const controls = new OrbitControls(camera, container);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 
 function init() {
+    // Camera
     camera.position.fromArray(P0);
     scene.add(camera);
 
+    // Controls
     controls.target.fromArray([0, 0, 0]);
     controls.update();
 
+    // Renderer
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setClearColor("#cccccc");
+    renderer.setClearColor(BACKGROUND_COLOR);
     renderer.setSize(window.innerWidth, window.innerHeight);
     // renderer.xr.enabled = true;
     renderer.setAnimationLoop(animate);
@@ -45,16 +51,9 @@ function init() {
 }
 
 function onWindowResize() {
-
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-
     renderer.setSize(window.innerWidth, window.innerHeight);
-
-}
-
-function animate() {
-    renderer.render(scene, camera);
 }
 
 function addGrid() {
@@ -89,6 +88,11 @@ function addLights() {
         light.position.set(10, 5, 0);
         scene.add(light);
     }
+}
+
+/** Animate and render */
+function animate() {
+    renderer.render(scene, camera);
 }
 
 init();
