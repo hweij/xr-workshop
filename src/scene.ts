@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+// XR
+import { VRButton } from 'three/addons/webxr/VRButton.js';
+import { XRButton } from 'three/addons/webxr/XRButton.js';
 
 /** Field of view */
 const FOV = 70;
@@ -33,7 +36,8 @@ export function createScene() {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(BACKGROUND_COLOR);
     renderer.setSize(window.innerWidth, window.innerHeight);
-    // renderer.xr.enabled = true;
+    renderer.xr.enabled = true;
+    renderer.xr.setReferenceSpaceType('local');
     renderer.setAnimationLoop(animate);
     container.appendChild(renderer.domElement);
 
@@ -42,6 +46,14 @@ export function createScene() {
     addLights();
 
     window.addEventListener('resize', onWindowResize);
+
+    // XR
+    document.body.appendChild(XRButton.createButton(renderer, {
+        'optionalFeatures': ['depth-sensing'],
+        'depthSensing': { 'usagePreference': ['gpu-optimized'], 'dataFormatPreference': [] }
+    }));
+    // VR
+    // document.body.appendChild(VRButton.createButton(renderer));
 
     return scene;
 }
