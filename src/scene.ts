@@ -40,7 +40,6 @@ export function createScene() {
     renderer.setClearColor(BACKGROUND_COLOR);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.xr.enabled = true;
-    renderer.xr.setReferenceSpaceType('local');
     renderer.setAnimationLoop(animate);
     container.appendChild(renderer.domElement);
 
