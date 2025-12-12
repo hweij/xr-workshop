@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 // XR
-import { VRButton } from 'three/addons/webxr/VRButton.js';
 import { XRButton } from 'three/addons/webxr/XRButton.js';
 
 /** Field of view */
@@ -25,7 +24,11 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 var controller0: THREE.XRTargetRaySpace;
 var controller1: THREE.XRTargetRaySpace;
 
-export function createScene() {
+var _actionCallback: (action: string, controller: THREE.XRTargetRaySpace) => void;
+
+export function createScene(actionCallback: (action: string, controller: THREE.XRTargetRaySpace) => void) {
+    _actionCallback = actionCallback;
+
     // Camera
     camera.position.fromArray(P0);
     scene.add(camera);
@@ -65,8 +68,9 @@ export function createScene() {
 function addControllers() {
     function addController(index: number) {
         const controller = renderer.xr.getController(index);
-        controller.addEventListener('selectstart', data => { controller.children[0].position.z = -0.1; });
-        controller.addEventListener('selectend', data => { controller.children[0].position.z = 0.0; })
+        controller.addEventListener('selectstart', _data => { controller.children[0].position.z = -0.1; });
+        controller.addEventListener('selectend', _data => { controller.children[0].position.z = 0.0; });
+        controller.addEventListener('squeezestart', _data => _actionCallback("grab", _data.target));
         controller.addEventListener('connected', (event) => createControllerNode(controller, event.data));
         controller.addEventListener('disconnected', () => controller.children[0]?.remove());
         scene.add(controller);

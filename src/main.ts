@@ -11,11 +11,47 @@ function createBlock() {
     return mesh;
 }
 
-const scene = createScene();
+const scene = createScene(actionCallback);
+
+const blocks: THREE.Mesh[] = [];
+
+let savedObject: THREE.Mesh | undefined = undefined;
+const savedPosition = new THREE.Vector3();
+
+function actionCallback(action: string, controller: THREE.XRTargetRaySpace) {
+    if (action === "grab") {
+        // Find closest cube and move it to the controller
+        let minDist = Number.MAX_VALUE;
+        let grabObject: THREE.Mesh | undefined = undefined;
+        for (const c of blocks) {
+            if (savedObject !== c) {
+                const dist = c.position.distanceTo(controller.position);
+                if (dist < minDist) {
+                    minDist = dist;
+                    grabObject = c;
+                }
+            }
+        }
+        if (grabObject) {
+            if (savedObject) {
+                scene.add(savedObject);
+                savedObject.position.copy(savedPosition);
+                savedObject = undefined;
+            }
+            savedObject = grabObject;
+            if (savedObject) {
+                savedPosition.copy(grabObject.position);
+                grabObject.position.set(0, 0, 0);
+                controller.add(grabObject);
+            }
+        }
+    }
+}
 
 // Add some simple blocks for testing
 for (let i = 0; i < 100; i++) {
     const block = createBlock();
+    blocks.push(block);
     block.position.x = randInt(-5, 5) * 0.1;
     block.position.y = randInt(-5, 5) * 0.1;
     block.position.z = randInt(-5, 5) * 0.1;
