@@ -24,10 +24,8 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 var controller0: THREE.XRTargetRaySpace;
 var controller1: THREE.XRTargetRaySpace;
 
-var _actionCallback: (action: string, controller: THREE.XRTargetRaySpace) => void;
-
-export function createScene(actionCallback: (action: string, controller: THREE.XRTargetRaySpace) => void) {
-    _actionCallback = actionCallback;
+export function createScene() {
+    //_actionCallback = actionCallback;
 
     // Camera
     camera.position.fromArray(P0);
@@ -70,7 +68,6 @@ function addControllers() {
         const controller = renderer.xr.getController(index);
         controller.addEventListener('selectstart', _data => { controller.children[0].position.z = -0.1; });
         controller.addEventListener('selectend', _data => { controller.children[0].position.z = 0.0; });
-        controller.addEventListener('squeezestart', _data => _actionCallback("grab", _data.target));
         controller.addEventListener('connected', (event) => createControllerNode(controller, event.data));
         controller.addEventListener('disconnected', () => controller.children[0]?.remove());
         scene.add(controller);
@@ -79,6 +76,10 @@ function addControllers() {
     controller0 = addController(0);
     controller1 = addController(1);
 };
+
+export function getController(index: number) {
+    return (index === 0) ? controller0 : controller1;
+}
 
 function createControllerNode(controller: THREE.XRTargetRaySpace, data: XRInputSource) {
     const color = (data.handedness === "right") ? "#ff0000" : "#0000ff";
