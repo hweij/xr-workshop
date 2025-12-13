@@ -40,9 +40,29 @@ function actionCallback(action: string, controller: THREE.XRTargetRaySpace) {
             }
             savedObject = grabObject;
             if (savedObject) {
-                savedPosition.copy(grabObject.position);
-                grabObject.position.set(0, 0, 0);
-                controller.add(grabObject);
+                savedPosition.copy(savedObject.position);
+
+                // grabObject.position.set(0, 0, 0);
+                // controller.add(grabObject);
+
+                // Animate position
+                // TODO: change this and implement a ticker linked to the renderer
+                let f = 0;
+                const tick = () => {
+                    if (savedObject) {
+                        savedObject.position.lerpVectors(savedPosition, controller.position, f);
+                    }
+                    if (f < 1.0) {
+                        f = (Math.min(1, f + 0.025));
+                    }
+                    if (f < 1) {
+                        window.setTimeout(tick, 0.1);
+                    }
+                    else {
+                        controller.attach(grabObject);
+                    }
+                }
+                tick();
             }
         }
     }
