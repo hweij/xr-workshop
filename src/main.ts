@@ -1,11 +1,9 @@
 import * as THREE from 'three';
 
 import { createScene, getController } from './scene';
-import { randInt } from 'three/src/math/MathUtils.js';
 
 const geometry = new THREE.BoxGeometry(0.2, 0.1, 0.1);
-const material = new THREE.MeshStandardMaterial({ color: "#ffffff" });
-function createBlock() {
+function createBlock(material: THREE.Material) {
     const mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
     return mesh;
@@ -66,10 +64,23 @@ function alignBlock(block: THREE.Mesh, grid: number) {
 }
 
 // Add some simple blocks for testing
-for (let i = 0; i < 100; i++) {
-    const block = createBlock();
-    blocks.push(block);
-    block.position.x = randInt(-5, 5) * 0.1;
-    block.position.y = randInt(0, 10) * 0.1;
-    block.position.z = randInt(-5, 5) * 0.1;
+const materials = [
+    new THREE.MeshStandardMaterial({ color: "#ffffff" }),
+    new THREE.MeshStandardMaterial({ color: "#ffcccc" }),
+    new THREE.MeshStandardMaterial({ color: "#ccccff" }),
+    new THREE.MeshStandardMaterial({ color: "#ccffcc" })
+];
+for (let stack = 0; stack < materials.length; stack++) {
+    const material = materials[stack];
+    for (let x = 0; x < 3; x++) {
+        for (let z = 0; z < 3; z++) {
+            for (let y = 0; y < 3; y++) {
+                const block = createBlock(material);
+                blocks.push(block);
+                block.position.x = x * 0.2 - 1;
+                block.position.y = y * 0.1 + 1;
+                block.position.z = z * 0.1 + ((stack - 2) * 0.5);
+            }
+        }
+    }
 }
