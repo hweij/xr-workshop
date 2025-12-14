@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
-import { createScene, getController } from './scene';
+import { createScene } from './scene';
+import { PaintBucket } from './objects/paint-bucket';
 
 const geometry = new THREE.BoxGeometry(0.2, 0.1, 0.1);
 function createBlock(material: THREE.Material) {
@@ -9,13 +10,12 @@ function createBlock(material: THREE.Material) {
     return mesh;
 }
 
-const scene = createScene();
-
-const controllers = [getController(0), getController(1)];
-for (const controller of controllers) {
+const scene = createScene(evt => {
+    // Called for each controller (check handedness in event data)
+    const controller = evt.target;
     controller.addEventListener('squeezestart', _event => { doGrab(controller) });
     controller.addEventListener('squeezeend', _event => { doDrop(controller) });
-}
+});
 
 const blocks: THREE.Mesh[] = [];
 
@@ -70,6 +70,7 @@ const materials = [
     new THREE.MeshStandardMaterial({ color: "#ccccff" }),
     new THREE.MeshStandardMaterial({ color: "#ccffcc" })
 ];
+
 for (let stack = 0; stack < materials.length; stack++) {
     const material = materials[stack];
     for (let x = 0; x < 3; x++) {
@@ -83,4 +84,12 @@ for (let stack = 0; stack < materials.length; stack++) {
             }
         }
     }
+}
+
+// Paint buckets
+for (let i = 0; i < materials.length; i++) {
+    const paintBucket = new PaintBucket(materials[i]);
+    paintBucket.position.z = (i - 2) * 0.5;
+    paintBucket.position.y = 1.4;
+    scene.add(paintBucket);
 }

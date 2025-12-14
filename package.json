@@ -8,6 +8,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
+    "dev pub": "vite --host",
     "build": "vite build --emptyOutDir --outDir ../hweij.github.io/xr-workshop",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

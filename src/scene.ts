@@ -24,8 +24,25 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 var controller0: THREE.XRTargetRaySpace;
 var controller1: THREE.XRTargetRaySpace;
 
-export function createScene() {
+export function createScene(onConnect: (evt: { data: XRInputSource; } & THREE.Event<"connected", THREE.XRTargetRaySpace>) => void) {
     //_actionCallback = actionCallback;
+
+    function addControllers() {
+        function addController(index: number) {
+            const controller = renderer.xr.getController(index);
+            controller.addEventListener('selectstart', _data => { controller.children[0].position.z = -0.1; });
+            controller.addEventListener('selectend', _data => { controller.children[0].position.z = 0.0; });
+            controller.addEventListener('connected', (event) => {
+                onConnect(event);
+                return createControllerNode(controller, event.data);
+            });
+            controller.addEventListener('disconnected', () => controller.children[0]?.remove());
+            scene.add(controller);
+            return controller;
+        };
+        controller0 = addController(0);
+        controller1 = addController(1);
+    };
 
     // Camera
     camera.position.fromArray(P0);
@@ -63,19 +80,6 @@ export function createScene() {
     return scene;
 }
 
-function addControllers() {
-    function addController(index: number) {
-        const controller = renderer.xr.getController(index);
-        controller.addEventListener('selectstart', _data => { controller.children[0].position.z = -0.1; });
-        controller.addEventListener('selectend', _data => { controller.children[0].position.z = 0.0; });
-        controller.addEventListener('connected', (event) => createControllerNode(controller, event.data));
-        controller.addEventListener('disconnected', () => controller.children[0]?.remove());
-        scene.add(controller);
-        return controller;
-    };
-    controller0 = addController(0);
-    controller1 = addController(1);
-};
 
 export function getController(index: number) {
     return (index === 0) ? controller0 : controller1;
