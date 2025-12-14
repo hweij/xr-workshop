@@ -88,8 +88,9 @@ for (let stack = 0; stack < materials.length; stack++) {
 
 // Paint buckets
 for (let i = 0; i < materials.length; i++) {
-    const paintBucket = new PaintBucket(materials[i]);
-    paintBucket.position.z = (i - 2) * 0.5;
-    paintBucket.position.y = 1.4;
+    const paintBucket = new PaintBucket(materials[i], { fill: Math.random() * 0.4 + 0.5 });
+    paintBucket.position.x = -0.2;
+    paintBucket.position.y = 1;
+    paintBucket.position.z = (i - 2) * 0.5 + 0.1;
     scene.add(paintBucket);
 }
