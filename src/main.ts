@@ -18,8 +18,9 @@ const scene = createScene(evt => {
 });
 
 const blocks: THREE.Mesh[] = [];
+const buckets: THREE.Group[] = [];
 
-let savedObject: THREE.Mesh | undefined = undefined;
+let savedObject: THREE.Object3D | undefined = undefined;
 //const savedQuaternion = new THREE.Quaternion();
 const savedPosition = new THREE.Vector3();
 
@@ -37,15 +38,18 @@ function doGrab(controller: THREE.XRTargetRaySpace) {
     const MIN_DIST = 0.2;
     // Find closest cube and move it to the controller
     let minDist = Number.MAX_VALUE;
-    let grabObject: THREE.Mesh | undefined = undefined;
-    for (const c of blocks) {
-        if (savedObject !== c) {
-            const dist = c.position.distanceTo(controller.position);
-            if (dist < minDist) {
-                minDist = dist;
-                grabObject = c;
+    let grabObject: THREE.Object3D | undefined = undefined;
+    for (const group of [blocks, buckets]) {
+        for (const c of group) {
+            if (savedObject !== c) {
+                const dist = c.position.distanceTo(controller.position);
+                if (dist < minDist) {
+                    minDist = dist;
+                    grabObject = c;
+                }
             }
         }
+
     }
     if (grabObject && (minDist < MIN_DIST)) {
         savedObject = grabObject;
@@ -56,7 +60,7 @@ function doGrab(controller: THREE.XRTargetRaySpace) {
     }
 }
 
-function alignBlock(block: THREE.Mesh, grid: number) {
+function alignBlock(block: THREE.Object3D, grid: number) {
     block.rotation.set(Math.round(block.rotation.x * 4 / Math.PI) * Math.PI / 4, Math.round(block.rotation.y * 4 / Math.PI) * Math.PI / 4, Math.round(block.rotation.z * 4 / Math.PI) * Math.PI / 4);
     block.position.x = Math.round(block.position.x / grid) * grid;
     block.position.y = Math.round(block.position.y / grid) * grid;
@@ -93,4 +97,5 @@ for (let i = 0; i < materials.length; i++) {
     paintBucket.position.y = 1;
     paintBucket.position.z = (i - 2) * 0.5 + 0.1;
     scene.add(paintBucket);
+    buckets.push(paintBucket);
 }
