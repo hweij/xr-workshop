@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 import { createScene, getController, ticker } from './scene';
 import { PaintBucket } from './objects/paint-bucket';
+import { PaintBrush } from './objects/paint-brush';
 
 /** Alignment grid in m */
 const grid = 0.05;
@@ -24,6 +25,7 @@ const scene = createScene(evt => {
 
 const blocks: THREE.Mesh[] = [];
 const buckets: THREE.Group[] = [];
+const tools: THREE.Mesh[] = [];
 
 let savedObject: THREE.Object3D | undefined = undefined;
 //const savedQuaternion = new THREE.Quaternion();
@@ -40,7 +42,7 @@ function doDrop(_controller: THREE.XRTargetRaySpace) {
 
 function doGrab(controller: THREE.XRTargetRaySpace) {
     doDrop(controller);
-    const grabObject = findClosest(controller, [blocks, buckets], MIN_DIST);
+    const grabObject = findClosest(controller, [blocks, buckets, tools], MIN_DIST);
     if (grabObject) {
         savedObject = grabObject;
         if (savedObject) {
@@ -108,36 +110,41 @@ for (let i = 0; i < materials.length; i++) {
     buckets.push(paintBucket);
 }
 
-/** Current paint material */
-let paintMaterial: THREE.Material = materials[0];
+// Paint brushes
+for (let i = 0; i < 2; i++) {
+    const paintBrush = new PaintBrush();
+    paintBrush.position.x = -0.2;
+    paintBrush.position.y = 1.3;
+    paintBrush.position.z = (i - 2) * 0.5 + 0.1;
+    scene.add(paintBrush);
+    tools.push(paintBrush);
+}
+
 
 // Ticker tasks
 const checkPaint = (t: number) => {
+    // Check if holding a paint brush
     for (let i = 0; i < 2; i++) {
         const controller = getController(i);
         if (controller) {
-            // Check if touchin a paint bucket.
-            // If so, copy the material
-            const bucket = findClosest(controller, [buckets], MIN_DIST);
-            if (bucket) {
-                // If found, apply the paint brushes material to the object
-                if (bucket instanceof PaintBucket) {
-                    paintMaterial = bucket.material;
-                    const c = controller.children[0];
-                    if (c instanceof THREE.Mesh) {
-                        c.material = paintMaterial;
+            // Check if holding a brush
+            const brush = controller.controller.children[0];
+            if (brush instanceof PaintBrush) {
+                // If so, copy the material
+                const bucket = findClosest(controller.grip, [buckets], MIN_DIST);
+                if (bucket) {
+                    // If found, apply the paint brushes material to the object
+                    if (bucket instanceof PaintBucket) {
+                        brush.material = bucket.material;
                     }
                 }
-
-            }
-            // Check if the user is holding a brush
-            // TODO
-            // If so, find closest object (closer than min dist)
-            const closest = findClosest(controller, [blocks], MIN_DIST);
-            if (closest) {
-                // If found, apply the paint brushes material to the object
-                if (closest instanceof THREE.Mesh) {
-                    closest.material = paintMaterial;
+                // If so, find closest object (closer than min dist)
+                const closest = findClosest(controller.controller, [blocks], MIN_DIST);
+                if (closest) {
+                    // If found, apply the paint brushes material to the object
+                    if (closest instanceof THREE.Mesh) {
+                        closest.material = brush.material;
+                    }
                 }
 
             }

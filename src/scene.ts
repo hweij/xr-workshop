@@ -21,9 +21,14 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, 0.1, 20);
 const controls = new OrbitControls(camera, container);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
+
+export interface ControllerInfo {
+    controller: THREE.XRTargetRaySpace,
+    grip: THREE.XRTargetRaySpace
+}
 //** Controller 0 */
-var controller0: THREE.XRTargetRaySpace;
-var controller1: THREE.XRTargetRaySpace;
+var controller0: ControllerInfo;
+var controller1: ControllerInfo;
 
 export function createScene(onConnect: (evt: { data: XRInputSource; } & THREE.Event<"connected", THREE.XRTargetRaySpace>) => void) {
     //_actionCallback = actionCallback;
@@ -31,15 +36,16 @@ export function createScene(onConnect: (evt: { data: XRInputSource; } & THREE.Ev
     function addControllers() {
         function addController(index: number) {
             const controller = renderer.xr.getController(index);
+            const controllerGrip = renderer.xr.getControllerGrip(index);
             controller.addEventListener('selectstart', _data => { controller.children[0].position.z = -0.1; });
             controller.addEventListener('selectend', _data => { controller.children[0].position.z = 0.0; });
             controller.addEventListener('connected', (event) => {
+                createControllerNode(controllerGrip, event.data);
                 onConnect(event);
-                return createControllerNode(controller, event.data);
             });
             controller.addEventListener('disconnected', () => controller.children[0]?.remove());
-            scene.add(controller);
-            return controller;
+            scene.add(controller, controllerGrip);
+            return { controller, grip: controllerGrip };
         };
         controller0 = addController(0);
         controller1 = addController(1);
@@ -87,14 +93,9 @@ export function getController(index: number) {
 }
 
 function createControllerNode(controller: THREE.XRTargetRaySpace, data: XRInputSource) {
-    const color = (data.handedness === "right") ? "#ff0000" : "#0000ff";
-    const geometry = new THREE.CylinderGeometry(0.005, 0.005, 0.2);
-    geometry.rotateX(Math.PI / 2);
-    geometry.translate(0, 0, -0.1);
-    const material = new THREE.MeshBasicMaterial({ color });
-    const mesh = new THREE.Mesh(geometry, material);
-    controller.add(mesh);
-    return mesh;
+    const material = new THREE.MeshBasicMaterial({ color: "#ffffff" });
+    const sphere = new THREE.SphereGeometry(0.05);
+    controller.add(new THREE.Mesh(sphere, material));
 }
 
 function onWindowResize() {
