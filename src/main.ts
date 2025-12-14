@@ -9,6 +9,10 @@ const grid = 0.05;
 /** Minimum distance for grabbing objects */
 const MIN_DIST = 0.2;
 
+
+const HIT_LAYER = 3;
+
+
 const geometry = new THREE.BoxGeometry(0.2, 0.1, 0.1);
 function createBlock(material: THREE.Material) {
     const mesh = new THREE.Mesh(geometry, material);
@@ -91,6 +95,7 @@ for (let stack = 0; stack < materials.length; stack++) {
         for (let z = 0; z < 3; z++) {
             for (let y = 0; y < 3; y++) {
                 const block = createBlock(material);
+                block.layers.enable(HIT_LAYER);
                 blocks.push(block);
                 block.position.x = x * 0.2 - 1;
                 block.position.y = y * 0.1 + 1;
@@ -106,6 +111,7 @@ for (let i = 0; i < materials.length; i++) {
     paintBucket.position.x = -0.2;
     paintBucket.position.y = 1;
     paintBucket.position.z = (i - 2) * 0.5 + 0.1;
+    paintBucket.enableLayer(HIT_LAYER);
     scene.add(paintBucket);
     buckets.push(paintBucket);
 }
@@ -120,6 +126,10 @@ for (let i = 0; i < 2; i++) {
     tools.push(paintBrush);
 }
 
+const tempMatrix = new THREE.Matrix4();
+const raycaster = new THREE.Raycaster();
+raycaster.far = MIN_DIST;
+raycaster.layers.set(HIT_LAYER);
 
 // Ticker tasks
 const checkPaint = (t: number) => {
@@ -130,23 +140,28 @@ const checkPaint = (t: number) => {
             // Check if holding a brush
             const brush = controller.controller.children[0];
             if (brush instanceof PaintBrush) {
-                // If so, copy the material
-                const bucket = findClosest(controller.grip, [buckets], MIN_DIST);
-                if (bucket) {
-                    // If found, apply the paint brushes material to the object
-                    if (bucket instanceof PaintBucket) {
-                        brush.material = bucket.material;
-                    }
-                }
-                // If so, find closest object (closer than min dist)
-                const closest = findClosest(controller.controller, [blocks], MIN_DIST);
-                if (closest) {
-                    // If found, apply the paint brushes material to the object
-                    if (closest instanceof THREE.Mesh) {
-                        closest.material = brush.material;
-                    }
-                }
+                // Using ray casting
+                tempMatrix.identity().extractRotation(brush.matrixWorld);
+                raycaster.ray.origin.setFromMatrixPosition(brush.matrixWorld);
+                raycaster.ray.direction.set(0, 0, - 1).applyMatrix4(tempMatrix);
+                const intersects = raycaster.intersectObjects(scene.children);
 
+                if (intersects.length > 0) {
+                    for (const c of intersects) {
+                        if (c.object instanceof THREE.Mesh) {
+                            const group = c.object.userData.group;
+                            if (group instanceof PaintBucket) {
+                                // It's a paint bucket
+                                brush.material = group.material;
+                            }
+                            else {
+                                // Presume it's a block
+                                c.object.material = brush.material;
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
     }

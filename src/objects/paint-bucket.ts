@@ -30,7 +30,7 @@ export class PaintBucket extends THREE.Group {
 
         const bucket = new THREE.Mesh(bucketGeometry, bucketMaterial);
         this.content = new THREE.Mesh(paintContentGeometry, material);
-
+        this.content.userData.group = this;
         this.add(bucket, this.content);
 
         if (options?.fill) {
@@ -40,6 +40,11 @@ export class PaintBucket extends THREE.Group {
 
     setFill(fill: number) {
         this.content.scale.setY(clamp(fill, 0, 1));
+    }
+
+    enableLayer(layer: number) {
+        this.layers.enable(layer);
+        this.content.layers.enable(layer);
     }
 }
 
