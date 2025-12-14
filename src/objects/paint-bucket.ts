@@ -19,10 +19,14 @@ const paintContentGeometry = new THREE.CylinderGeometry(innerRadius, innerRadius
 paintContentGeometry.translate(0, height / 2, 0);
 
 export class PaintBucket extends THREE.Group {
+    material: THREE.Material;
+
     content: THREE.Mesh;
 
     constructor(material: THREE.Material, options?: { fill?: number }) {
         super();
+
+        this.material = material;
 
         const bucket = new THREE.Mesh(bucketGeometry, bucketMaterial);
         this.content = new THREE.Mesh(paintContentGeometry, material);

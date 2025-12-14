@@ -1,7 +1,12 @@
 import * as THREE from 'three';
 
-import { createScene } from './scene';
+import { createScene, getController, ticker } from './scene';
 import { PaintBucket } from './objects/paint-bucket';
+
+/** Alignment grid in m */
+const grid = 0.05;
+/** Minimum distance for grabbing objects */
+const MIN_DIST = 0.2;
 
 const geometry = new THREE.BoxGeometry(0.2, 0.1, 0.1);
 function createBlock(material: THREE.Material) {
@@ -26,20 +31,30 @@ const savedPosition = new THREE.Vector3();
 
 function doDrop(_controller: THREE.XRTargetRaySpace) {
     if (savedObject) {
-        // Already holding an object: drop it
+        // Holding an object: drop it
         scene.attach(savedObject);
-        alignBlock(savedObject, 0.05);
+        alignBlock(savedObject, grid);
         savedObject = undefined;
     }
 }
 
 function doGrab(controller: THREE.XRTargetRaySpace) {
     doDrop(controller);
-    const MIN_DIST = 0.2;
+    const grabObject = findClosest(controller, [blocks, buckets], MIN_DIST);
+    if (grabObject) {
+        savedObject = grabObject;
+        if (savedObject) {
+            savedPosition.copy(savedObject.position);
+            controller.attach(grabObject);
+        }
+    }
+}
+
+function findClosest(controller: THREE.XRTargetRaySpace, targets: THREE.Object3D[][], MIN_DIST: number) {
     // Find closest cube and move it to the controller
     let minDist = Number.MAX_VALUE;
     let grabObject: THREE.Object3D | undefined = undefined;
-    for (const group of [blocks, buckets]) {
+    for (const group of targets) {
         for (const c of group) {
             if (savedObject !== c) {
                 const dist = c.position.distanceTo(controller.position);
@@ -49,15 +64,8 @@ function doGrab(controller: THREE.XRTargetRaySpace) {
                 }
             }
         }
-
     }
-    if (grabObject && (minDist < MIN_DIST)) {
-        savedObject = grabObject;
-        if (savedObject) {
-            savedPosition.copy(savedObject.position);
-            controller.attach(grabObject);
-        }
-    }
+    return (minDist < MIN_DIST) ? grabObject : null;
 }
 
 function alignBlock(block: THREE.Object3D, grid: number) {
@@ -99,3 +107,42 @@ for (let i = 0; i < materials.length; i++) {
     scene.add(paintBucket);
     buckets.push(paintBucket);
 }
+
+/** Current paint material */
+let paintMaterial: THREE.Material = materials[0];
+
+// Ticker tasks
+const checkPaint = (t: number) => {
+    for (let i = 0; i < 2; i++) {
+        const controller = getController(i);
+        if (controller) {
+            // Check if touchin a paint bucket.
+            // If so, copy the material
+            const bucket = findClosest(controller, [buckets], MIN_DIST);
+            if (bucket) {
+                // If found, apply the paint brushes material to the object
+                if (bucket instanceof PaintBucket) {
+                    paintMaterial = bucket.material;
+                    const c = controller.children[0];
+                    if (c instanceof THREE.Mesh) {
+                        c.material = paintMaterial;
+                    }
+                }
+
+            }
+            // Check if the user is holding a brush
+            // TODO
+            // If so, find closest object (closer than min dist)
+            const closest = findClosest(controller, [blocks], MIN_DIST);
+            if (closest) {
+                // If found, apply the paint brushes material to the object
+                if (closest instanceof THREE.Mesh) {
+                    closest.material = paintMaterial;
+                }
+
+            }
+        }
+    }
+}
+
+ticker.add(checkPaint);

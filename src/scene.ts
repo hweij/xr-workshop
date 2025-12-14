@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 // XR
 import { XRButton } from 'three/addons/webxr/XRButton.js';
+import { Ticker } from './ticker';
 
 /** Field of view */
 const FOV = 70;
@@ -136,7 +137,10 @@ function addLights() {
     }
 }
 
+export const ticker = new Ticker();
+
 /** Animate and render */
-function animate() {
+function animate(time: DOMHighResTimeStamp, _frame: XRFrame) {
+    ticker.tick(time);
     renderer.render(scene, camera);
 }
