@@ -31,16 +31,12 @@ const blocks: THREE.Mesh[] = [];
 const buckets: THREE.Group[] = [];
 const tools: THREE.Mesh[] = [];
 
-let savedObject: THREE.Object3D | undefined = undefined;
-//const savedQuaternion = new THREE.Quaternion();
-const savedPosition = new THREE.Vector3();
-
-function doDrop(_controller: THREE.XRTargetRaySpace) {
-    if (savedObject) {
+function doDrop(controller: THREE.XRTargetRaySpace) {
+    const obj = controller.children[0];
+    if (obj) {
         // Holding an object: drop it
-        scene.attach(savedObject);
-        alignBlock(savedObject, grid);
-        savedObject = undefined;
+        scene.attach(obj);
+        alignBlock(obj, grid);
     }
 }
 
@@ -48,11 +44,7 @@ function doGrab(controller: THREE.XRTargetRaySpace) {
     doDrop(controller);
     const grabObject = findClosest(controller, [blocks, buckets, tools], MIN_DIST);
     if (grabObject) {
-        savedObject = grabObject;
-        if (savedObject) {
-            savedPosition.copy(savedObject.position);
-            controller.attach(grabObject);
-        }
+        controller.attach(grabObject);
     }
 }
 
@@ -62,7 +54,7 @@ function findClosest(controller: THREE.XRTargetRaySpace, targets: THREE.Object3D
     let grabObject: THREE.Object3D | undefined = undefined;
     for (const group of targets) {
         for (const c of group) {
-            if (savedObject !== c) {
+            if (c.parent !== controller) {
                 const dist = c.position.distanceTo(controller.position);
                 if (dist < minDist) {
                     minDist = dist;
